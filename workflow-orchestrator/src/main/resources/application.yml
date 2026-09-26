@@ -1,0 +1,18 @@
+server.port: 8081
+spring:
+ application.name: workflow-orchestrator
+ rabbitmq:
+  host: ${RABBITMQ_HOST:localhost}
+  port: 5672
+  username: ${RABBITMQ_USER:guest}
+  password: ${RABBITMQ_PASSWORD:guest}
+  listener.simple:
+   default-requeue-rejected: false
+ datasource:
+  url: jdbc:h2:file:./data/orchestrator;MODE=PostgreSQL;AUTO_SERVER=TRUE
+  username: sa
+  password:
+ jpa:
+  hibernate.ddl-auto: update
+  open-in-view: false
+management.endpoints.web.exposure.include: health,info,metrics

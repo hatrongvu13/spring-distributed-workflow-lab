@@ -35,12 +35,12 @@ public class RequestController {
         return ResponseEntity.accepted().body(Map.of("requestId", id, "correlationId", corr, "statusUrl", "/api/v1/requests/" + id, "deadline", deadline));
     }
 
-    @GetMapping("/<built-in function id>")
+    @GetMapping("/{id}")
     RequestRecord get(@PathVariable String id) {
         return repo.findById(id).orElseThrow();
     }
 
-    @PostMapping("/<built-in function id>/rollback")
+    @PostMapping("/{id}/rollback")
     ResponseEntity<Void> rollback(@PathVariable String id, @RequestParam(defaultValue = "operator requested") String reason) {
         var r = repo.findById(id).orElseThrow();
         rabbit.convertAndSend(Topology.EXCHANGE, "rollback.requested", Json.write(new RollbackCommand(id, r.getCorrelationId(), reason, Instant.now())));

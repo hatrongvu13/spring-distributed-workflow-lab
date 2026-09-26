@@ -10,15 +10,21 @@ Demo monorepo cho workflow phân tán có HTTP ingress, deadline, retry, status 
 - `workflow-contracts`: message contracts và topology names.
 
 ## Run
+Yêu cầu: JDK 17, Maven, Docker.
+
 ```bash
 docker compose up -d
 mvn clean package
-mvn -pl request-api spring-boot:run
-mvn -pl workflow-orchestrator spring-boot:run
-mvn -pl worker-service spring-boot:run
-mvn -pl target-service spring-boot:run
 ```
-RabbitMQ UI: `http://localhost:15672`, guest/guest.
+
+Mỗi service chạy foreground riêng, nên mở **bốn terminal** (hoặc thêm `&` để chạy nền):
+```bash
+mvn -pl request-api spring-boot:run          # cổng 8080
+mvn -pl workflow-orchestrator spring-boot:run # cổng 8081
+mvn -pl worker-service spring-boot:run        # cổng 8082
+mvn -pl target-service spring-boot:run        # cổng 8083
+```
+RabbitMQ UI: [http://localhost:15672](http://localhost:15672), guest/guest.
 
 ## Default request
 ```bash
@@ -45,6 +51,8 @@ curl -X POST 'http://localhost:8080/api/v1/requests/REQUEST_ID/rollback?reason=o
 Failure path: `FAILED -> RETRY_SCHEDULED -> DISPATCHED`, then `FAILED` when attempts are exhausted.
 Deadline path: `TIMED_OUT -> rollback.execute -> ROLLED_BACK`.
 Manual path: `ROLLBACK_REQUESTED -> rollback.execute -> ROLLED_BACK`.
+
+> `WorkflowMessages.Status` cũng khai báo `PROCESSING` và `ROLLING_BACK`; hai giá trị này được để dành cho các bước trung gian nhưng chưa được service nào phát ra trong demo hiện tại.
 
 ## Important demo limitations
 The in-memory retry timer is intentionally simple. A production orchestrator must use durable delayed messages, a scheduler table with locking, Quartz, or Temporal/Camunda. Database updates and RabbitMQ publish are not atomic in this demo; add Transactional Outbox before production. H2 is local-only; use PostgreSQL plus Flyway. See `docs/production-roadmap.md`.
